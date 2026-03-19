@@ -407,3 +407,19 @@ body {
 .ai-success-icon {
   font-size: 24px;
 }
+
+@keyframes wobble {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg) scale(1.2); }
+}
+@keyframes popup-bounce {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); }
+}
+button {
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease, filter 0.2s ease !important;
+}
+button:active {
+  transform: scale(0.95);
+}

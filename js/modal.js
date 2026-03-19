@@ -120,17 +120,31 @@ function renderView() {
         }
       };
       
+      var actionGroup = document.createElement('div');
+      actionGroup.style.display = 'flex';
+      actionGroup.style.gap = '8px';
+      actionGroup.style.marginTop = '12px';
+
       var btnRestore = document.createElement('button');
       btnRestore.className = 'mod-primary';
-      btnRestore.style.marginTop = '12px';
       btnRestore.style.padding = '4px 8px';
-      btnRestore.innerText = 'Restaurar esta versão';
+      btnRestore.innerText = '✨ Restaurar esta versão';
       btnRestore.onclick = function() { restoreVersion(idx); };
+      
+      var btnDeleteHist = document.createElement('button');
+      btnDeleteHist.className = 'mod-danger';
+      btnDeleteHist.style.padding = '4px 8px';
+      btnDeleteHist.innerHTML = '🗑️';
+      btnDeleteHist.title = 'Apagar versão';
+      btnDeleteHist.onclick = function() { deleteVersion(idx); };
+
+      actionGroup.appendChild(btnRestore);
+      actionGroup.appendChild(btnDeleteHist);
       
       item.appendChild(histMeta);
       item.appendChild(histContent);
       item.appendChild(btnReadMore);
-      item.appendChild(btnRestore);
+      item.appendChild(actionGroup);
       listDiv.appendChild(item);
     });
     
@@ -177,6 +191,26 @@ function restoreVersion(versionIndex) {
          console.error(err);
          alert('Erro ao restaurar a versão.');
       });
+    });
+  }
+}
+
+function deleteVersion(versionIndex) {
+  if (confirm('Tem certeza que deseja apagar permanentemente esta versão do histórico?')) {
+    t.get('card', 'shared', 'briefings').then(function(briefings) {
+       if (!briefings) briefings = [];
+       var idx = briefings.findIndex(function(b) { return b.id === currentBriefing.id; });
+       if (idx !== -1) {
+         var b = briefings[idx];
+         b.versions.splice(versionIndex, 1);
+         currentBriefing = b;
+         return t.set('card', 'shared', 'briefings', briefings);
+       }
+    }).then(function() {
+       renderView();
+    }).catch(function(err){
+       console.error(err);
+       alert('Erro ao apagar a versão.');
     });
   }
 }
@@ -331,8 +365,8 @@ async function doAIReview(textHtml, onApply) {
       <div id="ai-magic-preview" class="ai-state" style="display: none;">
         <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
           <span style="color: #ff991f; display:flex; align-items:center;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            Atenção: Erros Encontrados
+            <span style="font-size:24px; margin-right:8px; animation: wobble 2s ease-in-out infinite;">🧐</span>
+            Revisão Atenta: Detalhes Encontrados
           </span>
         </h3>
         <p style="margin: 0; padding-bottom: 8px; color: #5e6c84;">Revisão concluída. Verifique e aplique as correções abaixo.</p>
@@ -353,10 +387,10 @@ async function doAIReview(textHtml, onApply) {
       </div>
       <div id="ai-magic-success" class="ai-state" style="display: none; padding: 24px;">
         <div class="ai-success-box" style="display:flex; align-items:center; gap:16px; background:#e3fcef; padding:24px; border-radius:8px; border:1px solid #abf5d1; margin-bottom:24px;">
-          <div class="ai-success-icon" style="font-size:32px;">✅</div>
+          <div class="ai-success-icon" style="font-size:32px; animation: popup-bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">🎉</div>
           <div>
-            <h4 style="margin:0 0 8px 0; font-size:18px; color:#006644;">Tudo certo!</h4>
-            <p style="margin:0; color:#006644;">O texto não contém erros de ortografia, concordância ou sintaxe.</p>
+            <h4 style="margin:0 0 8px 0; font-size:18px; color:#006644;">Texto 100% Validado!</h4>
+            <p style="margin:0; color:#006644;">Excelente copy! Nenhuma correção ortográfica ou gramatical encontrada.</p>
           </div>
         </div>
         <div style="text-align: center;">
@@ -392,7 +426,7 @@ async function doAIReview(textHtml, onApply) {
         model: "gpt-4o-mini",
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: "Você é um revisor ortográfico especializado em textos de briefing de agência de comunicação, escritos em português do Brasil.\n\nSua única função é corrigir: ortografia, concordância verbal e nominal, e pontuação.\n\nRegras obrigatórias:\n- Não reescreva frases. Não substitua palavras por sinônimos. Não altere o tom ou estilo.\n- Corrija apenas o que está objetivamente errado.\n- Nunca modifique atributos HTML, classes, URLs ou a estrutura das tags.\n- Trabalhe apenas no conteúdo textual dentro das tags.\n- Envolva o texto REMOVIDO com <del> e o texto ADICIONADO com <ins>, sem alterar nada ao redor.\n\nRetorne EXATAMENTE um JSON com:\n- has_errors: true se encontrou algum erro, false se o texto está correto\n- diff_html: o HTML completo com as marcações de diff aplicadas\n\nSe não houver erros, retorne diff_html idêntico ao input, sem nenhuma tag <del> ou <ins>." },
+          { role: "system", content: "Você é um revisor ortográfico especializado em textos de briefing de agência de comunicação, escritos em português do Brasil.\n\nSua única função é corrigir: ortografia, concordância verbal e nominal, e pontuação.\n\nRegras obrigatórias:\n- Não reescreva frases. Não substitua palavras por sinônimos. Não altere o tom ou estilo.\n- Corrija apenas o que está objetivamente errado.\n- Textos publicitários e de marketing frequentemente usam fragmentos de frase, frases sem verbo, e pontuação dramática como recurso estilístico intencional. Não os corrija.\n- Frases curtas isoladas, ausência de sujeito ou verbo, e dois pontos no final de linha são recursos válidos em copy. Ignore-os.\n- Só marque como erro o que for inequivocamente um engano: palavra escrita errada, acento incorreto, concordância claramente equivocada.\n- Nunca modifique atributos HTML, classes, URLs ou a estrutura das tags.\n- Trabalhe apenas no conteúdo textual dentro das tags.\n- Envolva o texto REMOVIDO com <del> e o texto ADICIONADO com <ins>, sem alterar nada ao redor.\n\nRetorne EXATAMENTE um JSON com:\n- has_errors: true se encontrou algum erro, false se o texto está correto\n- diff_html: o HTML completo com as marcações de diff aplicadas\n\nSe não houver erros, retorne diff_html idêntico ao input, sem nenhuma tag <del> ou <ins>." },
           { role: "user", content: textHtml }
         ],
         temperature: 0.2
