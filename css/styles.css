@@ -86,13 +86,32 @@ body {
   font-size: 14px;
 }
 
+.mod-primary {
+  background-color: #0079bf !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+.mod-primary:hover {
+  background-color: #026aa7 !important;
+}
+
+.mod-secondary {
+  background-color: #091e420f !important;
+  color: #172b4d !important;
+  border: none !important;
+}
+.mod-secondary:hover {
+  background-color: #091e4224 !important;
+}
+
 .mod-danger {
-  background-color: #eb5a46;
-  color: white !important;
-  border: none;
+  background-color: transparent !important;
+  color: #eb5a46 !important;
+  border: 1px solid #eb5a46 !important;
 }
 .mod-danger:hover {
-  background-color: #cf513d;
+  background-color: #eb5a46 !important;
+  color: #ffffff !important;
 }
 
 .p-0 { padding: 0; }
