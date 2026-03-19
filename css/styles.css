@@ -286,8 +286,48 @@ body {
   line-height: 1.2;
 }
 
-/* AI Button Icon */
-.ql-ai::before {
-  content: '✨';
+/* AI Diff Overlay adjustments */
+.diff-container {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  margin-top: 16px;
+}
+.diff-panel {
+  flex: 1;
+  background: #f4f5f7;
+  border: 1px solid #dfe1e6;
+  border-radius: 4px;
+  padding: 16px;
+  overflow-y: auto;
+  max-height: 50vh;
   font-size: 14px;
+  color: #172b4d;
+}
+.diff-panel h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #5e6c84;
+}
+.ai-left-panel ins { display: none !important; }
+.ai-left-panel del { color: #eb5a46; text-decoration: line-through; background-color: #ffebe6; padding: 0 2px; border-radius: 2px;}
+.ai-right-panel del { display: none !important; }
+.ai-right-panel ins { color: #00875a; text-decoration: none; background-color: #e3fcef; padding: 0 2px; border-radius: 2px;}
+
+.ai-success-box {
+  background: #e3fcef;
+  border: 1px solid #abf5d1;
+  color: #006644;
+  padding: 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.ai-success-icon {
+  font-size: 24px;
 }

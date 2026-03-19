@@ -20,114 +20,6 @@ var quill = new Quill('#editor', {
           this.quill.insertText(range.index, '\n', Quill.sources.USER);
           this.quill.insertEmbed(range.index + 1, 'divider', true, Quill.sources.USER);
           this.quill.setSelection(range.index + 2, Quill.sources.SILENT);
-        },
-        'ai': async function() {
-          var self = this;
-          var key = await t.get('member', 'private', 'openai_key');
-          if (!key) {
-             key = prompt("Para usar a revisão com IA, insira sua Chave de API da OpenAI (API Key).\nEssa chave ficará salva de forma segura apenas na sua conta do Trello, não sendo compartilhada com terceiros.");
-             if (!key) return;
-             await t.set('member', 'private', 'openai_key', key);
-          }
-          
-          var textHtml = self.quill.root.innerHTML;
-          if (!textHtml || textHtml.trim() === "<p><br></p>") return alert("O texto está vazio.");
-          
-          // Show UI Modal
-          var overlay = document.getElementById('ai-magic-overlay');
-          if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'ai-magic-overlay';
-            overlay.innerHTML = `
-              <div class="ai-magic-modal">
-                <div id="ai-magic-loading" class="ai-state">
-                  <div class="ai-spinner">✨</div>
-                  <h3>Revisando seu texto...</h3>
-                  <p>A inteligência artificial está analisando a ortografia e sintaxe.</p>
-                </div>
-                <div id="ai-magic-preview" class="ai-state" style="display: none;">
-                  <h3>Texto Sugerido pela IA</h3>
-                  <div id="ai-magic-content" class="ql-editor"></div>
-                  <div class="ai-magic-actions">
-                    <button id="ai-btn-cancel" class="mod-secondary">Descartar</button>
-                    <button id="ai-btn-accept" class="mod-primary">Aceitar Alterações</button>
-                  </div>
-                </div>
-              </div>
-            `;
-            document.body.appendChild(overlay);
-          }
-
-          var elLoading = overlay.querySelector('#ai-magic-loading');
-          var elPreview = overlay.querySelector('#ai-magic-preview');
-          var elContent = overlay.querySelector('#ai-magic-content');
-          var btnAccept = overlay.querySelector('#ai-btn-accept');
-          var btnCancel = overlay.querySelector('#ai-btn-cancel');
-
-          elLoading.style.display = 'flex';
-          elPreview.style.display = 'none';
-          elContent.innerHTML = '';
-          overlay.style.display = 'flex';
-          
-          // trigger animation
-          setTimeout(() => { overlay.classList.add('show'); }, 10);
-
-          try {
-            var response = await fetch("https://api.openai.com/v1/chat/completions", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + key
-              },
-              body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: [
-                  { role: "system", content: "Você é um excelente revisor de texto. Corrija rigorosamente a ortografia, concordância e sintaxe do conteúdo HTML a seguir. Mantenha todas as tags HTML originais estritamente intactas (como <b>, <i>, <p>, <ul>). Retorne APENAS o HTML corrigido e NADA mais, sem usar blocos de formatação markdown (como ```html)." },
-                  { role: "user", content: textHtml }
-                ],
-                temperature: 0.3
-              })
-            });
-
-            if (!response.ok) {
-              overlay.classList.remove('show');
-              setTimeout(() => { overlay.style.display = 'none'; }, 300);
-              if (response.status === 401) {
-                await t.remove('member', 'private', 'openai_key');
-                alert("Sua chave da OpenAI é inválida ou expirou. Tente novamente.");
-              } else {
-                alert("Erro na OpenAI: " + response.status + " " + response.statusText);
-              }
-              return;
-            }
-            
-            var data = await response.json();
-            var correctedHTML = data.choices[0].message.content;
-            correctedHTML = correctedHTML.replace(/^```html\s*/i, "").replace(/```\s*$/, "").trim();
-            
-            // Show preview
-            elLoading.style.display = 'none';
-            elPreview.style.display = 'flex';
-            elContent.innerHTML = correctedHTML;
-
-            // Handle actions
-            btnCancel.onclick = function() {
-              overlay.classList.remove('show');
-              setTimeout(() => { overlay.style.display = 'none'; }, 300);
-            };
-
-            btnAccept.onclick = function() {
-              self.quill.root.innerHTML = correctedHTML;
-              overlay.classList.remove('show');
-              setTimeout(() => { overlay.style.display = 'none'; }, 300);
-            };
-
-          } catch(err) {
-            console.error(err);
-            overlay.classList.remove('show');
-            setTimeout(() => { overlay.style.display = 'none'; }, 300);
-            alert("Erro ao conectar com a API da OpenAI. Verifique sua conexão ou tente mais tarde.");
-          }
         }
       }
     }
@@ -388,3 +280,181 @@ document.getElementById('btn-save').addEventListener('click', function() {
     });
   });
 });
+
+async function doAIReview(textHtml, onApply) {
+  var key = await t.get('member', 'private', 'openai_key');
+  if (!key) {
+     key = prompt("Para usar a revisão com IA, insira sua Chave de API da OpenAI (API Key).\nEla ficará salva de forma segura apenas na sua conta do Trello.");
+     if (!key) return;
+     await t.set('member', 'private', 'openai_key', key);
+  }
+  if (!textHtml || textHtml.trim() === "<p><br></p>" || textHtml.trim() === "") return alert("O texto está vazio.");
+
+  var overlay = document.getElementById('ai-magic-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'ai-magic-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div class="ai-magic-modal" style="width: 90%; max-width: 800px;">
+      <div id="ai-magic-loading" class="ai-state">
+        <div class="ai-spinner">✨</div>
+        <h3>Analisando seu texto...</h3>
+        <p>A inteligência artificial está verificando a ortografia, sintaxe e concordância.</p>
+      </div>
+      <div id="ai-magic-preview" class="ai-state" style="display: none;">
+        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <span style="color: #ff991f; display:flex; align-items:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Atenção: Erros Encontrados
+          </span>
+        </h3>
+        <p style="margin: 0; padding-bottom: 8px; color: #5e6c84;">Revisão concluída. Verifique as alterações apontadas abaixo (Original na esquerda, Corrigido na direita) e clique em Aplicar se desejar salvá-las.</p>
+        <div class="diff-container" style="display: flex; gap: 16px; margin-bottom: 24px;">
+          <div class="diff-panel ai-left-panel" style="flex:1; padding:12px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
+            <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Original</h4>
+            <div id="ai-diff-left" style="font-size:14px; line-height:20px;"></div>
+          </div>
+          <div class="diff-panel ai-right-panel" style="flex:1; padding:12px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
+            <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Corrigido</h4>
+            <div id="ai-diff-right" style="font-size:14px; line-height:20px;"></div>
+          </div>
+        </div>
+        <div class="ai-magic-actions" style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button id="ai-btn-cancel" class="mod-secondary">Descartar</button>
+          <button id="ai-btn-accept" class="mod-primary">Aplicar Alterações</button>
+        </div>
+      </div>
+      <div id="ai-magic-success" class="ai-state" style="display: none; padding: 24px;">
+        <div class="ai-success-box" style="display:flex; align-items:center; gap:16px; background:#e3fcef; padding:24px; border-radius:8px; border:1px solid #abf5d1; margin-bottom:24px;">
+          <div class="ai-success-icon" style="font-size:32px;">✅</div>
+          <div>
+            <h4 style="margin:0 0 8px 0; font-size:18px; color:#006644;">Tudo certo!</h4>
+            <p style="margin:0; color:#006644;">O texto não contém erros de ortografia, concordância ou sintaxe.</p>
+          </div>
+        </div>
+        <div style="text-align: center;">
+          <button id="ai-btn-close-success" class="mod-secondary">Fechar</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  var elLoading = overlay.querySelector('#ai-magic-loading');
+  var elPreview = overlay.querySelector('#ai-magic-preview');
+  var elSuccess = overlay.querySelector('#ai-magic-success');
+
+  elLoading.style.display = 'flex';
+  elPreview.style.display = 'none';
+  elSuccess.style.display = 'none';
+  overlay.style.display = 'flex';
+  setTimeout(() => { overlay.classList.add('show'); }, 10);
+
+  var hideOverlay = function() {
+    overlay.classList.remove('show');
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+  };
+
+  overlay.querySelector('#ai-btn-cancel').onclick = hideOverlay;
+  overlay.querySelector('#ai-btn-close-success').onclick = hideOverlay;
+
+  try {
+    var response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: "Você é um excelente revisor de texto. Leia o HTML fornecido. Corrija a ortografia, concordância e sintaxe. Retorne EXATAMENTE UM JSON com duas chaves: 'has_errors' (booleano true se encontrar erros, false se não) e 'diff_html' (string com o HTML final modificado). Mantenha as tags HTML inalteradas (ex: <b>, <i>, <p>). Envolva as partes que você REMOVEU ou corrigiu com <del> e as que você ADICIONOU substituindo-as com <ins>. Exemplo: se o original for '<p>Nós vai comer</p>', retorne '<p>Nós <del>vai</del><ins>vamos</ins> comer</p>'. Se não houver erros, retorne diff_html idêntico ao original sem tags del/ins." },
+          { role: "user", content: textHtml }
+        ],
+        temperature: 0.2
+      })
+    });
+
+    if (!response.ok) {
+      hideOverlay();
+      if (response.status === 401) {
+        await t.remove('member', 'private', 'openai_key');
+        alert("Sua chave da OpenAI é inválida ou expirou. Tente novamente.");
+      } else {
+        alert("Erro na OpenAI: " + response.statusText);
+      }
+      return;
+    }
+    
+    var data = await response.json();
+    var result = JSON.parse(data.choices[0].message.content);
+    
+    if (!result.has_errors || result.diff_html === textHtml) {
+      elLoading.style.display = 'none';
+      elSuccess.style.display = 'flex';
+    } else {
+      overlay.querySelector('#ai-diff-left').innerHTML = result.diff_html;
+      overlay.querySelector('#ai-diff-right').innerHTML = result.diff_html;
+      
+      elLoading.style.display = 'none';
+      elPreview.style.display = 'flex';
+
+      overlay.querySelector('#ai-btn-accept').onclick = function() {
+        var temp = document.createElement('div');
+        temp.innerHTML = result.diff_html;
+        temp.querySelectorAll('del').forEach(d => d.remove());
+        temp.querySelectorAll('ins').forEach(i => {
+          var parent = i.parentNode;
+          while(i.firstChild) parent.insertBefore(i.firstChild, i);
+          parent.removeChild(i);
+        });
+        
+        onApply(temp.innerHTML);
+        hideOverlay();
+      };
+    }
+  } catch(err) {
+    console.error(err);
+    hideOverlay();
+    alert("Erro ao conectar com a API da OpenAI. Detalhes no console.");
+  }
+}
+
+var btnAi = document.getElementById('btn-ai-review');
+if (btnAi) {
+  btnAi.addEventListener('click', function() {
+    if (!currentBriefing || !currentBriefing.content) return;
+    doAIReview(currentBriefing.content, function(correctedHTML) {
+      t.member('fullName').then(function(member) {
+        t.get('card', 'shared', 'briefings').then(function(briefings) {
+          if (!briefings) briefings = [];
+          var now = new Date().toLocaleString('pt-BR');
+          var authorName = member ? member.fullName : 'IA (Revisão)';
+
+          var idx = briefings.findIndex(function(b) { return b.id === currentBriefing.id; });
+          if (idx !== -1) {
+            var oldVersion = {
+              title: briefings[idx].title,
+              content: briefings[idx].content,
+              updatedAt: briefings[idx].updatedAt,
+              updatedBy: briefings[idx].updatedBy
+            };
+            if (!briefings[idx].versions) briefings[idx].versions = [];
+            briefings[idx].versions.unshift(oldVersion);
+            if (briefings[idx].versions.length > 2) {
+               briefings[idx].versions.pop();
+            }
+            briefings[idx].content = correctedHTML;
+            briefings[idx].updatedAt = now;
+            briefings[idx].updatedBy = authorName;
+            currentBriefing = briefings[idx];
+            
+            return t.set('card', 'shared', 'briefings', briefings);
+          }
+        }).then(function() {
+          renderView();
+        });
+      });
+    });
+  });
+}

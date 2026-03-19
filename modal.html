@@ -14,7 +14,10 @@
     <div id="view-content" class="ql-editor p-0" style="min-height: 250px;"></div>
     <div class="modal-footer">
       <div class="meta">Atualizado por <strong id="view-author"></strong> em <span id="view-date"></span></div>
-      <button id="btn-edit" class="mod-secondary">Editar Conteúdo</button>
+      <div style="display: flex; gap: 8px;">
+        <button id="btn-ai-review" class="mod-secondary" style="color: #0079bf !important;">✨ Revisão IA</button>
+        <button id="btn-edit" class="mod-secondary">Editar Conteúdo</button>
+      </div>
     </div>
   </div>
 
@@ -50,9 +53,6 @@
             <line class="ql-stroke" x1="3" x2="15" y1="9" y2="9" stroke="black" stroke-width="1.5"></line>
           </svg>
         </button>
-      </span>
-      <span class="ql-formats">
-        <button class="ql-ai" title="Revisar texto com IA"></button>
       </span>
     </div>
     <div id="editor" style="min-height: 250px;"></div>
