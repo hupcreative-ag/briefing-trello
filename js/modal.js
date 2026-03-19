@@ -96,16 +96,40 @@ function renderView() {
       fade.style.height = '30px';
       fade.style.background = 'linear-gradient(to bottom, rgba(244,245,247,0), rgba(244,245,247,1))';
       histContent.appendChild(fade);
+
+      var btnReadMore = document.createElement('a');
+      btnReadMore.innerText = 'Ler tudo';
+      btnReadMore.style.display = 'inline-block';
+      btnReadMore.style.fontSize = '12px';
+      btnReadMore.style.cursor = 'pointer';
+      btnReadMore.style.color = '#0079bf';
+      btnReadMore.style.marginTop = '4px';
+      btnReadMore.style.marginRight = '12px';
+      btnReadMore.onclick = function() {
+        if (histContent.style.maxHeight === '80px') {
+          histContent.style.maxHeight = '300px';
+          histContent.style.overflowY = 'auto';
+          fade.style.display = 'none';
+          btnReadMore.innerText = 'Ocultar texto';
+        } else {
+          histContent.style.maxHeight = '80px';
+          histContent.style.overflowY = 'hidden';
+          histContent.scrollTop = 0;
+          fade.style.display = 'block';
+          btnReadMore.innerText = 'Ler tudo';
+        }
+      };
       
       var btnRestore = document.createElement('button');
       btnRestore.className = 'mod-primary';
       btnRestore.style.marginTop = '12px';
       btnRestore.style.padding = '4px 8px';
-      btnRestore.innerText = 'Restaurar';
+      btnRestore.innerText = 'Restaurar esta versão';
       btnRestore.onclick = function() { restoreVersion(idx); };
       
       item.appendChild(histMeta);
       item.appendChild(histContent);
+      item.appendChild(btnReadMore);
       item.appendChild(btnRestore);
       listDiv.appendChild(item);
     });
@@ -312,12 +336,12 @@ async function doAIReview(textHtml, onApply) {
           </span>
         </h3>
         <p style="margin: 0; padding-bottom: 8px; color: #5e6c84;">Revisão concluída. Verifique as alterações apontadas abaixo (Original na esquerda, Corrigido na direita) e clique em Aplicar se desejar salvá-las.</p>
-        <div class="diff-container" style="display: flex; gap: 16px; margin-bottom: 24px;">
-          <div class="diff-panel ai-left-panel" style="flex:1; padding:12px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
+        <div class="diff-container" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+          <div class="diff-panel ai-left-panel" style="padding:16px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
             <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Original</h4>
             <div id="ai-diff-left" style="font-size:14px; line-height:20px;"></div>
           </div>
-          <div class="diff-panel ai-right-panel" style="flex:1; padding:12px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
+          <div class="diff-panel ai-right-panel" style="padding:16px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
             <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Corrigido</h4>
             <div id="ai-diff-right" style="font-size:14px; line-height:20px;"></div>
           </div>

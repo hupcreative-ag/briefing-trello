@@ -91,12 +91,12 @@ async function doAIReview(textHtml, onApply) {
           </span>
         </h3>
         <p style="margin: 0; padding-bottom: 8px; color: #5e6c84;">Revisão concluída. Verifique as alterações apontadas abaixo (Original na esquerda, Corrigido na direita) e clique em Aplicar se desejar salvá-las.</p>
-        <div class="diff-container" style="display: flex; gap: 16px; margin-bottom: 24px;">
-          <div class="diff-panel ai-left-panel" style="flex:1; padding:12px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
+        <div class="diff-container" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+          <div class="diff-panel ai-left-panel" style="padding:16px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
             <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Original</h4>
             <div id="ai-diff-left" style="font-size:14px; line-height:20px;"></div>
           </div>
-          <div class="diff-panel ai-right-panel" style="flex:1; padding:12px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
+          <div class="diff-panel ai-right-panel" style="padding:16px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
             <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Corrigido</h4>
             <div id="ai-diff-right" style="font-size:14px; line-height:20px;"></div>
           </div>
