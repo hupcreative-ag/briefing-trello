@@ -115,12 +115,12 @@ body {
   margin-bottom: 12px;
   box-sizing: border-box;
   outline: none;
-  background-color: #fafbfc;
+  background-color: #fafbfc !important;
   color: #172b4d !important;
 }
 .title-input:focus {
   border-color: #0079bf;
-  background-color: #ffffff;
+  background-color: #ffffff !important;
 }
 
 .modal-footer {

@@ -148,6 +148,7 @@ document.getElementById('btn-save').addEventListener('click', function() {
       console.error(err);
       saveBtn.disabled = false;
       saveBtn.innerText = 'Salvar';
+      alert('Erro ao salvar o briefing.\n\nO Trello possui um limite de tamanho (4 KB) para este tipo de dado.\nSe você colou uma IMAGEM dentro do texto, remova-a, pois o Trello bloqueia o salvamento de imagens coladas. Use a função "Anexos" do próprio cartão do Trello para imagens.');
     });
   });
 });
