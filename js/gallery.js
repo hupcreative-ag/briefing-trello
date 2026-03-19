@@ -15,6 +15,11 @@ function renderGallery(references) {
       
       var img = document.createElement('img');
       img.src = ref.url;
+      img.style.cursor = 'zoom-in';
+      img.onclick = function() {
+        document.getElementById('viewer-img').src = ref.url;
+        document.getElementById('image-viewer').classList.remove('hide');
+      };
       
       var delBtn = document.createElement('button');
       delBtn.className = 'gallery-item-delete';
@@ -64,4 +69,9 @@ document.getElementById('btn-save-ref').addEventListener('click', function() {
     b.disabled = false;
     b.innerText = 'Adicionar';
   });
+});
+
+document.getElementById('close-viewer').addEventListener('click', function() {
+  document.getElementById('image-viewer').classList.add('hide');
+  document.getElementById('viewer-img').src = '';
 });
