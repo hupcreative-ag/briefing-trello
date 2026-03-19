@@ -21,6 +21,7 @@ body {
   border-bottom-color: var(--dynamic-border, #ebecf0);
   cursor: pointer;
   border-radius: 3px;
+  position: relative;
 }
 .briefing-item:hover {
   background-color: var(--dynamic-hover, rgba(9, 30, 66, 0.08));
@@ -38,6 +39,23 @@ body {
 .briefing-title {
   font-weight: 500;
   color: inherit;
+}
+.briefing-item-delete {
+  position: absolute;
+  right: 12px;
+  color: #eb5a46;
+  font-size: 20px;
+  line-height: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: none;
+  padding: 0 4px;
+}
+.briefing-item-delete:hover {
+  color: #cf513d;
+}
+.briefing-item:hover .briefing-item-delete {
+  display: block;
 }
 
 /* MODAL UI (Forced White Background) */

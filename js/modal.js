@@ -335,7 +335,7 @@ async function doAIReview(textHtml, onApply) {
             Atenção: Erros Encontrados
           </span>
         </h3>
-        <p style="margin: 0; padding-bottom: 8px; color: #5e6c84;">Revisão concluída. Verifique as alterações apontadas abaixo (Original na esquerda, Corrigido na direita) e clique em Aplicar se desejar salvá-las.</p>
+        <p style="margin: 0; padding-bottom: 8px; color: #5e6c84;">Revisão concluída. Verifique e aplique as correções abaixo.</p>
         <div class="diff-container" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
           <div class="diff-panel ai-left-panel" style="padding:16px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
             <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Original</h4>
@@ -392,7 +392,7 @@ async function doAIReview(textHtml, onApply) {
         model: "gpt-4o-mini",
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: "Você é um excelente revisor de texto. Leia o HTML fornecido. Corrija a ortografia, concordância e sintaxe. Retorne EXATAMENTE UM JSON com duas chaves: 'has_errors' (booleano true se encontrar erros, false se não) e 'diff_html' (string com o HTML final modificado). Mantenha as tags HTML inalteradas (ex: <b>, <i>, <p>). Envolva as partes que você REMOVEU ou corrigiu com <del> e as que você ADICIONOU substituindo-as com <ins>. Exemplo: se o original for '<p>Nós vai comer</p>', retorne '<p>Nós <del>vai</del><ins>vamos</ins> comer</p>'. Se não houver erros, retorne diff_html idêntico ao original sem tags del/ins." },
+          { role: "system", content: "Você é um revisor de gramática extremamente conservador. Leia o HTML. Corrija APENAS erros gramaticais crassos, de ortografia e de concordância. É ESTRITAMENTE PROIBIDO reescrever frases, mudar o 'copy' ou sugerir formas diferentes de escrever se não houver erro gramatical evidente. Retorne UM JSON: 'has_errors' (booleano) e 'diff_html' (HTML). Mantenha as tags originais inalteradas. Envolva as partes REMOVIDAS com <del> e as ADICIONADAS com <ins>. Ex: '<p>Nós <del>vai</del><ins>vamos</ins> comer</p>'. Se não houver erro gramatical claro e grave, retorne o diff_html idêntico sem tags." },
           { role: "user", content: textHtml }
         ],
         temperature: 0.2
