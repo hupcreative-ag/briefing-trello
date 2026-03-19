@@ -261,3 +261,33 @@ body {
 #close-viewer:hover {
   background: rgba(255, 255, 255, 0.4);
 }
+
+/* Image Error State */
+.gallery-item-error {
+  width: 100%;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f4f5f7;
+  color: #5e6c84 !important;
+  text-align: center;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.gallery-item-error .error-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+.gallery-item-error .error-text {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* AI Button Icon */
+.ql-ai::before {
+  content: '✨';
+  font-size: 14px;
+}

@@ -21,6 +21,13 @@ function renderGallery(references) {
         document.getElementById('image-viewer').classList.remove('hide');
       };
       
+      img.onerror = function() {
+        var errorState = document.createElement('div');
+        errorState.className = 'gallery-item-error';
+        errorState.innerHTML = '<span class="error-icon">⚠️</span><span class="error-text">Imagem indisponível</span>';
+        item.replaceChild(errorState, img);
+      };
+      
       var delBtn = document.createElement('button');
       delBtn.className = 'gallery-item-delete';
       delBtn.innerText = '✕';
