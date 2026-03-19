@@ -7,9 +7,12 @@
 </head>
 <body class="viewer-body">
   <div id="briefing-list">
-    <p class="empty-state">Carregando briefings...</p>
+    <p class="empty-state">Carregando...</p>
   </div>
-  <button id="btn-add-briefing" class="mod-secondary" style="margin-top: 12px;">➕ Adicionar Briefing</button>
+  <div style="display: flex; gap: 8px; margin-top: 12px;">
+    <button id="btn-add-briefing" class="mod-secondary">+ Briefing</button>
+    <button id="btn-add-reference" class="mod-secondary">+ Referências</button>
+  </div>
   
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <script src="./js/list.js"></script>

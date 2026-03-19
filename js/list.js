@@ -20,7 +20,7 @@ t.render(function() {
     listEl.innerHTML = '';
     
     if (briefings.length === 0) {
-      listEl.innerHTML = '<p class="empty-state">Nenhum briefing criado ainda.</p>';
+      listEl.innerHTML = '<p class="empty-state">Nenhuma informação interna adicionada ainda.</p>';
     } else {
       briefings.forEach(function(b) {
         var item = document.createElement('div');
@@ -28,7 +28,8 @@ t.render(function() {
         
         var icon = document.createElement('span');
         icon.className = 'briefing-icon';
-        icon.innerHTML = '📄';
+        // Proper SVG icon that inherits text color for contrast
+        icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
         
         var title = document.createElement('span');
         title.className = 'briefing-title';
@@ -63,5 +64,13 @@ document.getElementById('btn-add-briefing').addEventListener('click', function()
     args: { action: 'create' },
     height: 600,
     title: 'Novo Briefing'
+  });
+});
+
+document.getElementById('btn-add-reference').addEventListener('click', function() {
+  t.modal({
+    url: './gallery.html',
+    height: 600,
+    title: 'Referências'
   });
 });

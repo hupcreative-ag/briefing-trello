@@ -1,26 +1,75 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", Ubuntu, "Droid Sans", "Helvetica Neue", sans-serif;
-  color: #172b4d;
   font-size: 14px;
   line-height: 20px;
   margin: 0;
   padding: 0;
   background-color: transparent;
+  /* Not forcing color so list adapts to Trello Dark/Light mode */
 }
 
+/* LIST UI */
 .viewer-body {
   padding: 4px;
+  color: inherit;
+}
+.briefing-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-bottom-color: var(--dynamic-border, #ebecf0);
+  cursor: pointer;
+  border-radius: 3px;
+}
+.briefing-item:hover {
+  background-color: var(--dynamic-hover, rgba(9, 30, 66, 0.08));
+}
+.briefing-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+.briefing-icon svg {
+  fill: currentColor;
+  width: 20px;
+  height: 20px;
+}
+.briefing-title {
+  font-weight: 500;
+  color: inherit;
 }
 
+/* MODAL UI (Forced White Background) */
 .modal-body {
   width: 100%;
   box-sizing: border-box;
+  background-color: #ffffff !important;
+  color: #172b4d !important;
+}
+
+/* Enforce dark text everywhere inside the modal regardless of Trello theme */
+.modal-body h1, .modal-body h2, .modal-body h3, .modal-body p, .modal-body span, .modal-body div, .modal-body input {
+  color: #172b4d;
+}
+
+#view-title {
+  margin-top: 0;
+  margin-bottom: 24px;
+  color: #172b4d;
+  font-size: 20px;
+  font-weight: 600;
+}
+.meta {
+  font-size: 12px;
+  color: #5e6c84 !important;
 }
 
 #editor {
   background-color: #ffffff;
   border-bottom-left-radius: 3px;
   border-bottom-right-radius: 3px;
+  color: #172b4d;
 }
 
 .ql-toolbar.ql-snow {
@@ -39,7 +88,7 @@ body {
 
 .mod-danger {
   background-color: #eb5a46;
-  color: white;
+  color: white !important;
   border: none;
 }
 .mod-danger:hover {
@@ -50,35 +99,12 @@ body {
 .hide { display: none !important; }
 
 .empty-state {
-  color: #5e6c84;
+  color: inherit;
+  opacity: 0.7;
   font-style: italic;
-  margin: 0;
+  margin: 0 0 16px 0;
 }
 
-/* LIST UI */
-.briefing-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 12px;
-  border: 1px solid transparent;
-  border-bottom-color: #ebecf0;
-  cursor: pointer;
-  border-radius: 3px;
-}
-.briefing-item:hover {
-  background-color: #f4f5f7;
-}
-.briefing-icon {
-  margin-right: 12px;
-  font-size: 16px;
-  color: #42526e;
-}
-.briefing-title {
-  font-weight: 500;
-  color: #172b4d;
-}
-
-/* MODAL UI */
 .title-input {
   width: 100%;
   padding: 8px 12px;
@@ -90,18 +116,13 @@ body {
   box-sizing: border-box;
   outline: none;
   background-color: #fafbfc;
+  color: #172b4d !important;
 }
 .title-input:focus {
   border-color: #0079bf;
   background-color: #ffffff;
 }
-#view-title {
-  margin-top: 0;
-  margin-bottom: 24px;
-  color: #172b4d;
-  font-size: 20px;
-  font-weight: 600;
-}
+
 .modal-footer {
   margin-top: 24px;
   padding-top: 16px;
@@ -110,7 +131,56 @@ body {
   justify-content: space-between;
   align-items: center;
 }
-.meta {
+
+/* Gallery styles */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.gallery-item {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #dfe1e6;
+  position: relative;
+  background-color: #f4f5f7;
+}
+.gallery-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+.gallery-item-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.6);
+  color: white !important;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
-  color: #5e6c84;
+}
+.gallery-item-delete:hover {
+  background: #eb5a46;
+}
+.add-ref-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #dfe1e6;
+}
+.add-ref-bar input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #dfe1e6;
+  border-radius: 3px;
 }

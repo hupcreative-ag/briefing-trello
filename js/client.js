@@ -20,7 +20,7 @@ window.TrelloPowerUp.initialize({
   // Capability 2: Card Back Section
   'card-back-section': function(t, options) {
     return {
-      title: 'Briefings',
+      title: 'Informações internas',
       icon: BLACK_ICON,
       content: {
         type: 'iframe',
