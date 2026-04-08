@@ -1,20 +1,7 @@
 var t = window.TrelloPowerUp.iframe();
 
 t.render(function() {
-  t.get('card', 'shared').then(function(shared) {
-    var briefings = shared.briefings || [];
-    
-    // Migration logic for old single briefing to multi-briefing payload
-    if (briefings.length === 0 && shared.briefing) {
-       briefings.push({
-         id: Math.random().toString(36).substr(2, 9),
-         title: 'Briefing Inicial',
-         content: shared.briefing.content,
-         updatedAt: shared.briefing.updatedAt,
-         updatedBy: shared.briefing.updatedBy
-       });
-       t.set('card', 'shared', 'briefings', briefings);
-    }
+  window.loadBriefings(t).then(function(briefings) {
     
     var listEl = document.getElementById('briefing-list');
     listEl.innerHTML = '';
@@ -44,7 +31,7 @@ t.render(function() {
           e.stopPropagation();
           if (confirm('Tem certeza que deseja apagar este briefing permanentemente?')) {
             var newBriefings = briefings.filter(function(item) { return item.id !== b.id; });
-            t.set('card', 'shared', 'briefings', newBriefings).then(function() {
+            window.saveBriefings(t, newBriefings).then(function() {
               item.remove();
               if (newBriefings.length === 0) {
                 listEl.innerHTML = '<p class="empty-state">Nenhuma informação interna adicionada ainda.</p>';

@@ -159,7 +159,7 @@ function renderView() {
 function restoreVersion(versionIndex) {
   if (confirm('Tem certeza que deseja restaurar esta versão? A atual irá para o histórico.')) {
     t.member('fullName').then(function(member) {
-      t.get('card', 'shared', 'briefings').then(function(briefings) {
+      window.loadBriefings(t).then(function(briefings) {
          if (!briefings) briefings = [];
          var idx = briefings.findIndex(function(b) { return b.id === currentBriefing.id; });
          if (idx !== -1) {
@@ -183,7 +183,7 @@ function restoreVersion(versionIndex) {
            if (b.versions.length > 2) b.versions.pop();
            
            currentBriefing = b;
-           return t.set('card', 'shared', 'briefings', briefings);
+           return window.saveBriefings(t, briefings);
          }
       }).then(function() {
          renderView();
@@ -197,14 +197,14 @@ function restoreVersion(versionIndex) {
 
 function deleteVersion(versionIndex) {
   if (confirm('Tem certeza que deseja apagar permanentemente esta versão do histórico?')) {
-    t.get('card', 'shared', 'briefings').then(function(briefings) {
+    window.loadBriefings(t).then(function(briefings) {
        if (!briefings) briefings = [];
        var idx = briefings.findIndex(function(b) { return b.id === currentBriefing.id; });
        if (idx !== -1) {
          var b = briefings[idx];
          b.versions.splice(versionIndex, 1);
          currentBriefing = b;
-         return t.set('card', 'shared', 'briefings', briefings);
+         return window.saveBriefings(t, briefings);
        }
     }).then(function() {
        renderView();
@@ -232,7 +232,7 @@ function renderEdit() {
 
 t.render(function() {
   if (briefingId) {
-    t.get('card', 'shared', 'briefings').then(function(briefings) {
+    window.loadBriefings(t).then(function(briefings) {
       if (!briefings) briefings = [];
       currentBriefing = briefings.find(function(b) { return b.id === briefingId; });
       
@@ -263,10 +263,10 @@ document.getElementById('btn-cancel').addEventListener('click', function() {
 
 document.getElementById('btn-delete').addEventListener('click', function() {
   if (confirm('Tem certeza que deseja excluir este briefing permanentemente?')) {
-    t.get('card', 'shared', 'briefings').then(function(briefings) {
+    window.loadBriefings(t).then(function(briefings) {
       if (!briefings) briefings = [];
       var newBriefings = briefings.filter(function(b) { return b.id !== currentBriefing.id; });
-      return t.set('card', 'shared', 'briefings', newBriefings);
+      return window.saveBriefings(t, newBriefings);
     }).then(function() {
       t.closeModal();
     });
@@ -282,7 +282,7 @@ document.getElementById('btn-save').addEventListener('click', function() {
   var newContent = quill.root.innerHTML;
   
   t.member('fullName').then(function(member) {
-    t.get('card', 'shared', 'briefings').then(function(briefings) {
+    window.loadBriefings(t).then(function(briefings) {
       if (!briefings) briefings = [];
       
       var now = new Date().toLocaleString('pt-BR');
@@ -325,7 +325,7 @@ document.getElementById('btn-save').addEventListener('click', function() {
         action = null; 
       }
       
-      return t.set('card', 'shared', 'briefings', briefings);
+      return window.saveBriefings(t, briefings);
     }).then(function() {
       saveBtn.disabled = false;
       saveBtn.innerText = 'Salvar';
@@ -484,7 +484,7 @@ if (btnAi) {
     if (!currentBriefing || !currentBriefing.content) return;
     doAIReview(currentBriefing.content, function(correctedHTML) {
       t.member('fullName').then(function(member) {
-        t.get('card', 'shared', 'briefings').then(function(briefings) {
+        window.loadBriefings(t).then(function(briefings) {
           if (!briefings) briefings = [];
           var now = new Date().toLocaleString('pt-BR');
           var authorName = member ? member.fullName : 'IA (Revisão)';
@@ -507,7 +507,7 @@ if (btnAi) {
             briefings[idx].updatedBy = authorName;
             currentBriefing = briefings[idx];
             
-            return t.set('card', 'shared', 'briefings', briefings);
+            return window.saveBriefings(t, briefings);
           }
         }).then(function() {
           renderView();

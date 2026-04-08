@@ -44,7 +44,7 @@ window.TrelloPowerUp.initialize({
 
   // Capability 3: Card Badges
   'card-badges': function(t, options) {
-    return t.get('card', 'shared', 'briefings').then(function(briefings) {
+    return window.loadBriefings(t).then(function(briefings) {
       if (briefings && briefings.length > 0) {
         return [{
           icon: BLACK_ICON,
