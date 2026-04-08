@@ -29,9 +29,13 @@ window.saveBriefings = function(t, briefings) {
     // First remove old keys to free up Trello's absolute 102KB data limit
     var p = keysToRemove.length > 0 ? t.remove('card', 'shared', keysToRemove) : Promise.resolve();
     
-    // Then set the new data object (Trello perfectly accepts objects to set multiple keys at once)
+    // Then set the new data keys using individual calls to bypass the SDK's object stringification trap!
     return p.then(function() {
-      return t.set('card', 'shared', data);
+      var promises = [ t.set('card', 'shared', 'briefings_chunks', chunks.length) ];
+      for (var j = 0; j < chunks.length; j++) {
+        promises.push(t.set('card', 'shared', 'briefings_chunk_' + j, chunks[j]));
+      }
+      return Promise.all(promises);
     });
   });
 };
