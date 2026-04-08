@@ -178,9 +178,7 @@ function restoreVersion(versionIndex) {
            b.updatedAt = new Date().toLocaleString('pt-BR');
            b.updatedBy = member ? member.fullName : 'Membro Trello';
            
-           b.versions.splice(versionIndex, 1);
-           b.versions.unshift(oldVersion);
-           if (b.versions.length > 2) b.versions.pop();
+           b.versions[versionIndex] = oldVersion;
            
            currentBriefing = b;
            return window.saveBriefings(t, briefings);
@@ -299,9 +297,12 @@ document.getElementById('btn-save').addEventListener('click', function() {
             updatedBy: briefings[idx].updatedBy
           };
           if (!briefings[idx].versions) briefings[idx].versions = [];
-          briefings[idx].versions.unshift(oldVersion);
-          if (briefings[idx].versions.length > 2) {
-            briefings[idx].versions.pop();
+          if (briefings[idx].versions.length === 0) {
+            briefings[idx].versions.push(oldVersion);
+          } else if (briefings[idx].versions.length === 1) {
+            briefings[idx].versions.unshift(oldVersion);
+          } else {
+            briefings[idx].versions[0] = oldVersion;
           }
           
           briefings[idx].title = newTitle;
