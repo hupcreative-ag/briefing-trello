@@ -299,10 +299,6 @@ document.getElementById('btn-save').addEventListener('click', function() {
           if (!briefings[idx].versions) briefings[idx].versions = [];
           if (briefings[idx].versions.length === 0) {
             briefings[idx].versions.push(oldVersion);
-          } else if (briefings[idx].versions.length === 1) {
-            briefings[idx].versions.unshift(oldVersion);
-          } else {
-            briefings[idx].versions[0] = oldVersion;
           }
           
           briefings[idx].title = newTitle;
