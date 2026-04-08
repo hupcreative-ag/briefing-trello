@@ -1,25 +1,27 @@
 window.saveBriefings = function(t, briefings) {
   var json = JSON.stringify(briefings);
-  // Trello limit is 4096 chars per key. Using 3000 to be strictly safe.
   var chunks = json.match(/.{1,3000}/g) || [];
   
   return t.get('card', 'shared').then(function(shared) {
     var data = { briefings_chunks: chunks.length };
+    var keysToRemove = [];
     
-    // Apply chunks and clear old chunks if the new size is smaller
     var oldChunks = shared ? (shared.briefings_chunks || 0) : 0;
     for (var i = 0; i < Math.max(chunks.length, oldChunks); i++) {
       if (i < chunks.length) {
         data['briefings_chunk_' + i] = chunks[i];
       } else {
-        data['briefings_chunk_' + i] = null; // Delete extra chunks
+        keysToRemove.push('briefings_chunk_' + i);
       }
     }
     
-    // Clear legacy key to free up space
-    if (shared && shared.briefings) data.briefings = null;
+    if (shared && shared.briefings) keysToRemove.push('briefings');
     
-    return t.set('card', 'shared', data);
+    return t.set('card', 'shared', data).then(function() {
+      if (keysToRemove.length > 0) {
+        return t.remove('card', 'shared', keysToRemove);
+      }
+    });
   });
 };
 
