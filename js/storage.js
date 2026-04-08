@@ -1,30 +1,24 @@
 window.saveBriefings = function(t, briefings) {
-  // Truncate history globally to ensure we only ever keep the FIRST version
-  // and discard anything else to save space.
   var cleanBriefings = briefings.map(function(b) {
      if (b.versions && b.versions.length > 1) {
-        // Since we originally used unshift, the absolute first version is at the end of the array.
         b.versions = [ b.versions[b.versions.length - 1] ];
      }
      return b;
   });
 
   var json = JSON.stringify(cleanBriefings);
-  var chunks = json.match(/.{1,3000}/g) || [];
+  // Using [\s\S] ensures it works even if there are any unexpected literal newlines.
+  var chunks = json.match(/[\s\S]{1,3000}/g) || [];
   
   return t.get('card', 'shared').then(function(shared) {
-    var promises = [];
+    var data = { briefings_chunks: chunks.length };
     var keysToRemove = [];
-    
-    // Save chunks count separately to avoid object stringify length limits
-    promises.push(t.set('card', 'shared', 'briefings_chunks', chunks.length));
     
     var oldChunks = shared ? (shared.briefings_chunks || 0) : 0;
     
     for (var i = 0; i < Math.max(chunks.length, oldChunks); i++) {
       if (i < chunks.length) {
-        // Save each chunk individually
-        promises.push(t.set('card', 'shared', 'briefings_chunk_' + i, chunks[i]));
+        data['briefings_chunk_' + i] = chunks[i];
       } else {
         keysToRemove.push('briefings_chunk_' + i);
       }
@@ -32,10 +26,12 @@ window.saveBriefings = function(t, briefings) {
     
     if (shared && shared.briefings) keysToRemove.push('briefings');
     
-    return Promise.all(promises).then(function() {
-      if (keysToRemove.length > 0) {
-        return t.remove('card', 'shared', keysToRemove);
-      }
+    // First remove old keys to free up Trello's absolute 102KB data limit
+    var p = keysToRemove.length > 0 ? t.remove('card', 'shared', keysToRemove) : Promise.resolve();
+    
+    // Then set the new data object (Trello perfectly accepts objects to set multiple keys at once)
+    return p.then(function() {
+      return t.set('card', 'shared', data);
     });
   });
 };
@@ -55,7 +51,6 @@ window.loadBriefings = function(t) {
     }
     
     var briefings = shared.briefings || [];
-    
     if (briefings.length === 0 && shared.briefing) {
        briefings.push({
          id: Math.random().toString(36).substr(2, 9),

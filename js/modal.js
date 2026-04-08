@@ -277,7 +277,7 @@ document.getElementById('btn-save').addEventListener('click', function() {
   saveBtn.innerText = 'Salvando...';
   
   var newTitle = document.getElementById('edit-title').value.trim() || 'Briefing Sem Título';
-  var newContent = quill.root.innerHTML;
+  var newContent = quill.root.innerHTML.replace(/<img[^>]*>/gi, '');
   
   t.member('fullName').then(function(member) {
     window.loadBriefings(t).then(function(briefings) {
