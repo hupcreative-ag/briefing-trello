@@ -91,6 +91,14 @@ async function doAIReview(textHtml, onApply) {
           </span>
         </h3>
         <p style="margin: 0; padding-bottom: 8px; color: #5e6c84;">Revisão concluída. Verifique e aplique as correções abaixo.</p>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; background: #fff; padding: 8px 12px; border-radius: 4px; border: 1px solid #dfe1e6; width: fit-content;">
+          <div style="display: flex; gap: 2px;">
+            <div id="ai-sev-1" style="width: 24px; height: 12px; border-radius: 12px 0 0 12px; background: #ebecf0;"></div>
+            <div id="ai-sev-2" style="width: 24px; height: 12px; background: #ebecf0;"></div>
+            <div id="ai-sev-3" style="width: 24px; height: 12px; border-radius: 0 12px 12px 0; background: #ebecf0;"></div>
+          </div>
+          <span id="ai-error-count-text" style="font-size: 13px; color: #172b4d; font-weight: 600;"></span>
+        </div>
         <div class="diff-container" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
           <div class="diff-panel ai-left-panel" style="padding:16px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
             <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Original</h4>
@@ -168,10 +176,39 @@ async function doAIReview(textHtml, onApply) {
     var data = await response.json();
     var result = JSON.parse(data.choices[0].message.content);
     
-    if (!result.has_errors || result.diff_html === textHtml) {
+    var numErrors = 0;
+    if (result.corrections && Array.isArray(result.corrections)) {
+      numErrors = result.corrections.length;
+    } else {
+      numErrors = (result.diff_html.match(/<del>/gi) || []).length;
+    }
+
+    if (!result.has_errors || numErrors === 0) {
       elLoading.style.display = 'none';
       elSuccess.style.display = 'flex';
     } else {
+      var badgeText = overlay.querySelector('#ai-error-count-text');
+      var sev1 = overlay.querySelector('#ai-sev-1');
+      var sev2 = overlay.querySelector('#ai-sev-2');
+      var sev3 = overlay.querySelector('#ai-sev-3');
+      var defaultGray = '#ebecf0';
+      
+      badgeText.innerText = numErrors + (numErrors === 1 ? ' erro encontrado' : ' erros encontrados');
+      
+      if (numErrors <= 2) {
+         sev1.style.background = '#61bd4f'; // Verde
+         sev2.style.background = defaultGray;
+         sev3.style.background = defaultGray;
+      } else if (numErrors <= 5) {
+         sev1.style.background = '#f2d600'; // Amarelo/Laranja
+         sev2.style.background = '#f2d600';
+         sev3.style.background = defaultGray;
+      } else {
+         sev1.style.background = '#eb5a46'; // Vermelho
+         sev2.style.background = '#eb5a46';
+         sev3.style.background = '#eb5a46';
+      }
+
       overlay.querySelector('#ai-diff-left').innerHTML = result.diff_html;
       overlay.querySelector('#ai-diff-right').innerHTML = result.diff_html;
       
