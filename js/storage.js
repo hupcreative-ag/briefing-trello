@@ -1,15 +1,30 @@
 window.saveBriefings = function(t, briefings) {
-  var json = JSON.stringify(briefings);
+  // Truncate history globally to ensure we only ever keep the FIRST version
+  // and discard anything else to save space.
+  var cleanBriefings = briefings.map(function(b) {
+     if (b.versions && b.versions.length > 1) {
+        // Since we originally used unshift, the absolute first version is at the end of the array.
+        b.versions = [ b.versions[b.versions.length - 1] ];
+     }
+     return b;
+  });
+
+  var json = JSON.stringify(cleanBriefings);
   var chunks = json.match(/.{1,3000}/g) || [];
   
   return t.get('card', 'shared').then(function(shared) {
-    var data = { briefings_chunks: chunks.length };
+    var promises = [];
     var keysToRemove = [];
     
+    // Save chunks count separately to avoid object stringify length limits
+    promises.push(t.set('card', 'shared', 'briefings_chunks', chunks.length));
+    
     var oldChunks = shared ? (shared.briefings_chunks || 0) : 0;
+    
     for (var i = 0; i < Math.max(chunks.length, oldChunks); i++) {
       if (i < chunks.length) {
-        data['briefings_chunk_' + i] = chunks[i];
+        // Save each chunk individually
+        promises.push(t.set('card', 'shared', 'briefings_chunk_' + i, chunks[i]));
       } else {
         keysToRemove.push('briefings_chunk_' + i);
       }
@@ -17,7 +32,7 @@ window.saveBriefings = function(t, briefings) {
     
     if (shared && shared.briefings) keysToRemove.push('briefings');
     
-    return t.set('card', 'shared', data).then(function() {
+    return Promise.all(promises).then(function() {
       if (keysToRemove.length > 0) {
         return t.remove('card', 'shared', keysToRemove);
       }
@@ -41,7 +56,6 @@ window.loadBriefings = function(t) {
     
     var briefings = shared.briefings || [];
     
-    // Migration logic for old single briefing
     if (briefings.length === 0 && shared.briefing) {
        briefings.push({
          id: Math.random().toString(36).substr(2, 9),
@@ -50,7 +64,6 @@ window.loadBriefings = function(t) {
          updatedAt: shared.briefing.updatedAt,
          updatedBy: shared.briefing.updatedBy
        });
-       // Resave using new chunk system
        window.saveBriefings(t, briefings);
     }
     return briefings;
