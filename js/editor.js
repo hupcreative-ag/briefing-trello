@@ -99,6 +99,13 @@ async function doAIReview(textHtml, onApply) {
           </div>
           <span id="ai-error-count-text" style="font-size: 13px; color: #172b4d; font-weight: 600;"></span>
         </div>
+        
+        <button id="ai-btn-toggle-corrections" class="mod-secondary" style="display: none; margin-bottom: 16px; font-size: 12px; align-items: center; gap: 4px;">
+          Mostrar correções
+          <svg id="ai-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div id="ai-corrections-list" style="display: none; flex-direction: column; margin-bottom: 16px; max-height: 250px; overflow-y: auto; background: #fff; border: 1px solid #dfe1e6; border-radius: 4px; padding: 0;"></div>
+
         <div class="diff-container" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
           <div class="diff-panel ai-left-panel" style="padding:16px; border:1px solid #dfe1e6; border-radius:4px; max-height:40vh; overflow-y:auto; background:#f4f5f7;">
             <h4 style="margin:0 0 8px 0; font-size:12px; color:#5e6c84; text-transform:uppercase;">Original</h4>
@@ -211,6 +218,39 @@ async function doAIReview(textHtml, onApply) {
 
       overlay.querySelector('#ai-diff-left').innerHTML = result.diff_html;
       overlay.querySelector('#ai-diff-right').innerHTML = result.diff_html;
+      
+      var btnToggle = overlay.querySelector('#ai-btn-toggle-corrections');
+      var listCorrections = overlay.querySelector('#ai-corrections-list');
+      
+      if (result.corrections && result.corrections.length > 0) {
+        btnToggle.style.display = 'flex';
+        listCorrections.innerHTML = '';
+        result.corrections.forEach(function(c, i) {
+           var item = document.createElement('div');
+           item.style.padding = '12px';
+           if (i < result.corrections.length - 1) item.style.borderBottom = '1px solid #ebecf0';
+           item.style.fontSize = '13px';
+           item.innerHTML = '<div style="margin-bottom: 6px; line-height: 1.4;">' +
+             '<del style="color: #eb5a46; background-color: #ffebe6; padding: 2px 4px; border-radius: 3px;">' + c.original + '</del>' +
+             ' <span style="color: #5e6c84; font-weight: bold; margin: 0 4px;">&rarr;</span> ' +
+             '<ins style="color: #006644; background-color: #e3fcef; font-weight: 600; padding: 2px 4px; border-radius: 3px; text-decoration: none;">' + c.corrigido + '</ins>' +
+             '</div>' +
+             '<div style="font-size: 11.5px; color: #5e6c84; margin-top: 4px;">' + c.motivo + '</div>';
+           listCorrections.appendChild(item);
+        });
+        
+        btnToggle.onclick = function() {
+           if (listCorrections.style.display === 'none') {
+             listCorrections.style.display = 'flex';
+             btnToggle.innerHTML = 'Ocultar correções <svg id="ai-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(180deg); transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+           } else {
+             listCorrections.style.display = 'none';
+             btnToggle.innerHTML = 'Mostrar correções <svg id="ai-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+           }
+        };
+      } else {
+        btnToggle.style.display = 'none';
+      }
       
       elLoading.style.display = 'none';
       elPreview.style.display = 'flex';
