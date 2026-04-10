@@ -459,6 +459,52 @@ async function doAIReview(textHtml, onApply) {
     var data = await response.json();
     var result = JSON.parse(data.choices[0].message.content);
     
+    // Passo 2: Validador
+    if (result.corrections && result.corrections.length > 0) {
+      var response2 = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+        body: JSON.stringify({
+          model: "gpt-4.1-nano",
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: "Você é um validador de revisão ortográfica para textos de agência de comunicação em português do Brasil.\n\nVocê vai receber o texto original e uma lista de correções sugeridas por um revisor. Analise cada correção e decida se é legítima.\n\nRejeite correções que envolvam:\n- Palavras ou expressões em inglês ou outro idioma usadas intencionalmente\n- Nomes de marcas, produtos ou termos técnicos\n- Mudanças de maiúscula para minúscula ou vice-versa em substantivos comuns\n- Escolhas estilísticas de copy como frases curtas ou fragmentos\n- Sintaxe ou estrutura de frase\n- Espaços extras entre palavras ou antes e depois de pontuação\n\nAprove apenas correções de:\n- Erros evidentes de digitação ou grafia incorreta em português\n- Acentuação errada em palavras comuns\n- Concordância inequivocamente errada entre sujeito e verbo ou entre substantivo e adjetivo em contexto formal\n\nRetorne EXATAMENTE um JSON com:\n- approved_corrections: array com apenas os objetos aprovados no formato { original, corrigido, motivo }\n- has_errors: true se approved_corrections tiver ao menos um item, false se não" },
+            { role: "user", content: JSON.stringify({ original_text: textHtml, corrections: result.corrections }) }
+          ],
+          temperature: 0.1
+        })
+      });
+
+      if (response2.ok) {
+        var data2 = await response2.json();
+        var result2 = JSON.parse(data2.choices[0].message.content);
+        
+        // Strip rejected corrections from diff_html
+        var tempDiv = document.createElement('div');
+        tempDiv.innerHTML = result.diff_html;
+        var dels = Array.from(tempDiv.querySelectorAll('del'));
+        dels.forEach(function(d) {
+           var ins = d.nextElementSibling;
+           if (ins && ins.tagName.toLowerCase() === 'ins') {
+               var isApproved = (result2.approved_corrections || []).find(function(c) {
+                   return c.original.trim() === d.textContent.trim() && 
+                          c.corrigido.trim() === ins.textContent.trim();
+               });
+               if (!isApproved) {
+                   var text = document.createTextNode(d.innerHTML);
+                   d.parentNode.insertBefore(text, d);
+                   d.parentNode.removeChild(d);
+                   ins.parentNode.removeChild(ins);
+               }
+           }
+        });
+        
+        result.corrections = result2.approved_corrections || [];
+        result.has_errors = result.corrections.length > 0;
+        result.diff_html = tempDiv.innerHTML;
+      }
+    }
+    
     var numErrors = 0;
     if (result.corrections && Array.isArray(result.corrections)) {
       numErrors = result.corrections.length;
