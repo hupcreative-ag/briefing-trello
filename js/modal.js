@@ -42,176 +42,9 @@ function renderView() {
   
   var histContainer = document.getElementById('history-container');
   if (histContainer) { histContainer.remove(); }
-  
-  if (currentBriefing.versions && currentBriefing.versions.length > 0) {
-    histContainer = document.createElement('div');
-    histContainer.id = 'history-container';
-    histContainer.style.marginTop = '24px';
-    histContainer.style.paddingTop = '16px';
-    histContainer.style.borderTop = '1px solid #ebecf0';
-    
-    var toggleBtn = document.createElement('button');
-    toggleBtn.className = 'mod-secondary';
-    toggleBtn.innerText = 'Ver histórico';
-    toggleBtn.style.marginBottom = '12px';
-    
-    var listDiv = document.createElement('div');
-    listDiv.style.display = 'none';
-    
-    toggleBtn.onclick = function() {
-      if (listDiv.style.display === 'none') {
-        listDiv.style.display = 'block';
-        toggleBtn.innerText = 'Ocultar histórico';
-      } else {
-        listDiv.style.display = 'none';
-        toggleBtn.innerText = 'Ver histórico';
-      }
-    };
-    
-    currentBriefing.versions.forEach(function(ver, idx) {
-      var item = document.createElement('div');
-      item.style.marginBottom = '16px';
-      item.style.padding = '12px';
-      item.style.backgroundColor = '#f4f5f7';
-      item.style.borderRadius = '3px';
-      
-      var histMeta = document.createElement('div');
-      histMeta.style.marginBottom = '8px';
-      histMeta.style.fontSize = '12px';
-      histMeta.style.color = '#5e6c84';
-      histMeta.innerHTML = '<strong>' + (ver.title || 'Sem título') + '</strong> - Salvo por ' + (ver.updatedBy || 'Desconhecido') + ' em ' + (ver.updatedAt || '');
-      
-      var histContent = document.createElement('div');
-      histContent.style.fontSize = '12px';
-      histContent.style.maxHeight = '80px';
-      histContent.style.overflow = 'hidden';
-      histContent.style.position = 'relative';
-      histContent.innerHTML = ver.content;
-      
-      var fade = document.createElement('div');
-      fade.style.position = 'absolute';
-      fade.style.bottom = '0';
-      fade.style.left = '0';
-      fade.style.right = '0';
-      fade.style.height = '30px';
-      fade.style.background = 'linear-gradient(to bottom, rgba(244,245,247,0), rgba(244,245,247,1))';
-      histContent.appendChild(fade);
-
-      var btnReadMore = document.createElement('a');
-      btnReadMore.innerText = 'Ler tudo';
-      btnReadMore.style.display = 'inline-block';
-      btnReadMore.style.fontSize = '12px';
-      btnReadMore.style.cursor = 'pointer';
-      btnReadMore.style.color = '#0079bf';
-      btnReadMore.style.marginTop = '4px';
-      btnReadMore.style.marginRight = '12px';
-      btnReadMore.onclick = function() {
-        if (histContent.style.maxHeight === '80px') {
-          histContent.style.maxHeight = '300px';
-          histContent.style.overflowY = 'auto';
-          fade.style.display = 'none';
-          btnReadMore.innerText = 'Ocultar texto';
-        } else {
-          histContent.style.maxHeight = '80px';
-          histContent.style.overflowY = 'hidden';
-          histContent.scrollTop = 0;
-          fade.style.display = 'block';
-          btnReadMore.innerText = 'Ler tudo';
-        }
-      };
-      
-      var actionGroup = document.createElement('div');
-      actionGroup.style.display = 'flex';
-      actionGroup.style.gap = '8px';
-      actionGroup.style.marginTop = '12px';
-
-      var btnRestore = document.createElement('button');
-      btnRestore.className = 'mod-primary';
-      btnRestore.style.padding = '4px 8px';
-      btnRestore.innerText = '✨ Restaurar esta versão';
-      btnRestore.onclick = function() { restoreVersion(idx); };
-      
-      var btnDeleteHist = document.createElement('button');
-      btnDeleteHist.className = 'mod-danger';
-      btnDeleteHist.style.padding = '4px 8px';
-      btnDeleteHist.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align: middle;"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg>';
-      btnDeleteHist.title = 'Apagar versão';
-      btnDeleteHist.onclick = function() { deleteVersion(idx); };
-
-      actionGroup.appendChild(btnRestore);
-      actionGroup.appendChild(btnDeleteHist);
-      
-      item.appendChild(histMeta);
-      item.appendChild(histContent);
-      item.appendChild(btnReadMore);
-      item.appendChild(actionGroup);
-      listDiv.appendChild(item);
-    });
-    
-    histContainer.appendChild(toggleBtn);
-    histContainer.appendChild(listDiv);
-    
-    var footer = document.querySelector('#view-mode .modal-footer');
-    viewMode.insertBefore(histContainer, footer);
-  }
 }
 
-function restoreVersion(versionIndex) {
-  if (confirm('Tem certeza que deseja restaurar esta versão? A atual irá para o histórico.')) {
-    t.member('fullName').then(function(member) {
-      window.loadBriefings(t).then(function(briefings) {
-         if (!briefings) briefings = [];
-         var idx = briefings.findIndex(function(b) { return b.id === currentBriefing.id; });
-         if (idx !== -1) {
-           var b = briefings[idx];
-           var versionToRestore = b.versions[versionIndex];
-           
-           var oldVersion = {
-             title: b.title,
-             content: b.content,
-             updatedAt: b.updatedAt,
-             updatedBy: b.updatedBy
-           };
-           
-           b.title = versionToRestore.title;
-           b.content = versionToRestore.content;
-           b.updatedAt = new Date().toLocaleString('pt-BR');
-           b.updatedBy = member ? member.fullName : 'Membro Trello';
-           
-           b.versions[versionIndex] = oldVersion;
-           
-           currentBriefing = b;
-           return window.saveBriefings(t, briefings);
-         }
-      }).then(function() {
-         renderView();
-      }).catch(function(err){
-         console.error(err);
-         alert('Erro ao restaurar a versão.');
-      });
-    });
-  }
-}
 
-function deleteVersion(versionIndex) {
-  if (confirm('Tem certeza que deseja apagar permanentemente esta versão do histórico?')) {
-    window.loadBriefings(t).then(function(briefings) {
-       if (!briefings) briefings = [];
-       var idx = briefings.findIndex(function(b) { return b.id === currentBriefing.id; });
-       if (idx !== -1) {
-         var b = briefings[idx];
-         b.versions.splice(versionIndex, 1);
-         currentBriefing = b;
-         return window.saveBriefings(t, briefings);
-       }
-    }).then(function() {
-       renderView();
-    }).catch(function(err){
-       console.error(err);
-       alert('Erro ao apagar a versão.');
-    });
-  }
-}
 
 function renderEdit() {
   viewMode.classList.add('hide');
@@ -290,16 +123,7 @@ document.getElementById('btn-save').addEventListener('click', function() {
         // Update
         var idx = briefings.findIndex(function(b) { return b.id === currentBriefing.id; });
         if (idx !== -1) {
-          var oldVersion = {
-            title: briefings[idx].title,
-            content: briefings[idx].content,
-            updatedAt: briefings[idx].updatedAt,
-            updatedBy: briefings[idx].updatedBy
-          };
-          if (!briefings[idx].versions) briefings[idx].versions = [];
-          if (briefings[idx].versions.length === 0) {
-            briefings[idx].versions.push(oldVersion);
-          }
+
           
           briefings[idx].title = newTitle;
           briefings[idx].content = newContent;
@@ -331,7 +155,7 @@ document.getElementById('btn-save').addEventListener('click', function() {
       console.error(err);
       saveBtn.disabled = false;
       saveBtn.innerText = 'Salvar';
-      alert('Erro ao salvar o briefing.\n\nO Trello possui um limite de tamanho (4 KB) para este tipo de dado.\nSe você colou uma IMAGEM dentro do texto, remova-a, pois o Trello bloqueia o salvamento de imagens coladas. Use a função "Anexos" do próprio cartão do Trello para imagens.');
+      alert('Erro ao salvar o briefing. Verifique sua conexão com o banco de dados.');
     });
   });
 });
@@ -611,17 +435,7 @@ if (btnAi) {
 
           var idx = briefings.findIndex(function(b) { return b.id === currentBriefing.id; });
           if (idx !== -1) {
-            var oldVersion = {
-              title: briefings[idx].title,
-              content: briefings[idx].content,
-              updatedAt: briefings[idx].updatedAt,
-              updatedBy: briefings[idx].updatedBy
-            };
-            if (!briefings[idx].versions) briefings[idx].versions = [];
-            briefings[idx].versions.unshift(oldVersion);
-            if (briefings[idx].versions.length > 2) {
-               briefings[idx].versions.pop();
-            }
+
             briefings[idx].content = correctedHTML;
             briefings[idx].updatedAt = now;
             briefings[idx].updatedBy = authorName;

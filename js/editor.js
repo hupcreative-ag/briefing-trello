@@ -17,16 +17,41 @@ function resize() {
 // Ao abrir, tentar pegar o dado ja salvo e preencher
 t.render(function() {
   t.get('card', 'shared', 'briefing').then(function(briefing) {
-    if (briefing && briefing.content) {
-      quill.root.innerHTML = briefing.content;
+    var savedContent = (briefing && briefing.content) ? briefing.content : '';
+    var cardId = t.getContext().card;
+    var draftContent = localStorage.getItem('briefing_draft_' + cardId);
+    
+    // Se existir um rascunho diferente do conteúdo do Trello
+    if (draftContent && draftContent.length > 5 && draftContent !== savedContent) {
+      quill.root.innerHTML = draftContent;
+      
+      var alertDiv = document.createElement('div');
+      alertDiv.style.cssText = "background-color: #fffae6; color: #ff8b00; padding: 10px; font-size: 13px; text-align: center; border-bottom: 1px solid #ffe380; font-weight: bold;";
+      alertDiv.innerHTML = "⚠️ Rascunho Recuperado! Houve uma falha ou fechamento não salvo. Salve novamente em seguida.";
+      document.body.insertBefore(alertDiv, document.body.firstChild);
+    } else {
+      if (savedContent) {
+        quill.root.innerHTML = savedContent;
+      }
     }
+    
     // Resize timeout
     setTimeout(resize, 100);
   });
 });
 
+var draftTimeout;
 quill.on('text-change', function() {
   resize();
+  
+  // Auto-Save Rascunho Local
+  clearTimeout(draftTimeout);
+  draftTimeout = setTimeout(function() {
+    var cardId = t.getContext().card;
+    if (cardId) {
+      localStorage.setItem('briefing_draft_' + cardId, quill.root.innerHTML);
+    }
+  }, 1000);
 });
 
 // Ações de Salvar / Cancelar
@@ -52,11 +77,16 @@ document.getElementById('btn-save').addEventListener('click', function() {
     // Salvar nas propriedades compartilhadas do cartão usando "briefing" como chave
     return t.set('card', 'shared', 'briefing', data);
   }).then(function() {
+    // Ao salvar com sucesso, limpar o rascunho de backup
+    var cardId = t.getContext().card;
+    if (cardId) localStorage.removeItem('briefing_draft_' + cardId);
+    
     t.closePopup();
   }).catch(function(err){
     console.error('Erro ao salvar o briefing:', err);
     saveBtn.disabled = false;
     saveBtn.innerText = 'Salvar Briefing';
+    alert("ERRO AO SALVAR NO TRELLO:\\nO texto é muito grande (ex: imagens coladas) ou a internet caiu.\\n\\nFique tranquilo: seu texto está salvo no Rascunho Local do seu computador. Você pode fechar com segurança.");
   });
 });
 
